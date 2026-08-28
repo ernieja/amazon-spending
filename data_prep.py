@@ -19,6 +19,39 @@ OUT_PATH = "data/processed_orders.csv"
 # refund for a carrier/billing issue where nothing was sent back.
 RETURN_RELATED_REASONS = {"Customer return", "Item not satisfactory"}
 
+GROCERY_SUBCATEGORY_KEYWORDS = [
+    ("Produce", [
+        "produce", "banana", "grape", "lettuce", "spinach", "onion", "tomato",
+        "pepper", "broccoli", "avocado", "lemon", "lime", "melon", "berry",
+        "mango", "pineapple", "cucumber", "carrot", "potato", "cilantro",
+        "basil", "kale", "nectarine", "pumpkin", "shallot", "garlic", "sage",
+        "mushroom", "mandarin", "brussels", "peas",
+    ]),
+    ("Meat & Seafood", [
+        "chicken", "beef", "pork", "turkey breast", "salmon", "shrimp", "sausage",
+        "bacon", "steak", "drumstick", "ground beef", "fish", "brisket", "cod",
+    ]),
+    ("Dairy, Eggs & Alt-Protein", [
+        "milk", "cheese", "butter", "yogurt", "egg", "cream", "tofu", "feta",
+    ]),
+    ("Prepared Foods & Bakery", [
+        "kitchens", "soup", "meal", "loaf", "bread", "sandwich", "rotisserie",
+        "sushi", "pizza", "quiche", "prepared foods", "macaron", "bakery",
+    ]),
+    ("Pantry & Dry Goods", [
+        "flour", "pasta", "rice", "beans", "salsa", "sauce", "oil", "vinegar",
+        "spice", "seasoning", "canned", "tortilla", "okra", "mustard", "mayo",
+        "dill", "almond",
+    ]),
+    ("Beverages & Coffee", [
+        "coffee", "espresso", "latte", "juice", "tea", "soda", "kombucha", "nog",
+    ]),
+    ("Snacks & Sweets", [
+        "chip", "cracker", "cookie", "chocolate", "candy", "pretzel",
+    ]),
+    ("Alcohol", ["wine", "beer", "sauvignon", "valpolicella", "cabernet", "chardonnay", "ipa"]),
+]
+
 PLACEHOLDERS = {"Not Applicable", "Not Available", "Not Provided"}
 
 # Ordered so more specific keywords win before generic ones (e.g. "grill" before "kitchen").
@@ -72,6 +105,21 @@ def clean_placeholders(df):
     return df.replace(list(PLACEHOLDERS), pd.NA)
 
 
+def derive_grocery_subcategory(product_name):
+    """Finer-grained tagging within Grocery (Whole Foods/panda01) items only.
+    Same keyword-matching approach and same caveat as derive_category: a real
+    long tail stays in "Other Grocery" rather than being force-fit."""
+    if not isinstance(product_name, str):
+        return "Other Grocery"
+    low = product_name.lower()
+    if "refund" in low or "customer services" in low:
+        return "Non-item (fee/refund)"
+    for subcat, keywords in GROCERY_SUBCATEGORY_KEYWORDS:
+        if any(kw in low for kw in keywords):
+            return subcat
+    return "Other Grocery"
+
+
 def derive_category(product_name, is_grocery):
     if is_grocery:
         return "Grocery"
@@ -94,6 +142,10 @@ def load_orders():
         derive_category(name, grocery)
         for name, grocery in zip(df["Product Name"], df["is_grocery"])
     ]
+    df["grocery_subcategory"] = df["Product Name"].where(df["is_grocery"]).apply(
+        derive_grocery_subcategory
+    )
+    df.loc[~df["is_grocery"], "grocery_subcategory"] = pd.NA
     df["year"] = df["Order Date"].dt.year
     df["year_month"] = df["Order Date"].dt.tz_localize(None).dt.to_period("M").dt.to_timestamp()
     return df
