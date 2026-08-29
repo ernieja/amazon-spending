@@ -53,6 +53,14 @@ def category_color(index: int) -> str:
     return CATEGORICAL[index % len(CATEGORICAL)]
 
 
+def category_color_rgba(index: int, alpha: float) -> str:
+    """Same categorical color as category_color(), as an rgba() string. Use this
+    for faded fills instead of marker.opacity."""
+    hex_color = CATEGORICAL[index % len(CATEGORICAL)].lstrip("#")
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
 def apply_layout(
     fig: go.Figure,
     title: str = None,

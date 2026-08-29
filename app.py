@@ -7,10 +7,13 @@ navigation into the three deep-dive pages.
 import streamlit as st
 import plotly.graph_objects as go
 
-from src.data_loader import load_orders
-from src.style import apply_layout, category_color, setup_page_style
+from src.data_loader import load_orders, annual_spend
+from src.style import (
+    apply_layout, category_color, category_color_rgba, setup_page_style,
+    INK_SECONDARY,
+)
 
-st.set_page_config(page_title="Amazon Spending Analysis", page_icon="📦", layout="wide")
+st.set_page_config(page_title="Amazon Spending Analysis", layout="wide")
 setup_page_style()
 
 st.title("Amazon Spending Analysis")
@@ -24,6 +27,8 @@ df = load_orders()
 orders_dedup = df.drop_duplicates("Order ID")
 
 total_spend = df["Total Amount"].sum()
+total_refunds = orders_dedup["refund_amount"].sum()
+net_spend = total_spend - total_refunds
 total_orders = df["Order ID"].nunique()
 date_min, date_max = df["Order Date"].min(), df["Order Date"].max()
 return_rate = orders_dedup["is_returned"].mean()
@@ -32,7 +37,13 @@ top_category = (
 )
 
 col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("Total spend", f"${total_spend:,.0f}")
+col1.metric(
+    "Total spend", f"${total_spend:,.0f}",
+    help=f"Gross. \\${net_spend:,.0f} net of the \\${total_refunds:,.0f} "
+         f"refunded over the full history "
+         f"({total_refunds / total_spend * 100:.0f}% of gross), de-duplicated "
+         "from Amazon's refund export.",
+)
 col2.metric("Unique orders", f"{total_orders:,}")
 col3.metric("Date range", f"{date_min.year}–{date_max.year}")
 col4.metric("Return rate", f"{return_rate*100:.1f}%", help="Share of orders with at least one return, by unique Order ID.")
@@ -42,23 +53,55 @@ col4.metric("Return rate", f"{return_rate*100:.1f}%", help="Share of orders with
 col5.metric("Top category", top_category.split(" & ")[0], help=f"Full label: {top_category}")
 
 st.caption(
-    f"Data through {date_max.strftime('%b %Y')} — {date_max.year} is a partial year, "
-    "called out explicitly wherever it affects a comparison."
+    f"Net of refunds: \\${net_spend:,.0f} — \\${total_refunds:,.0f} came back "
+    f"({total_refunds / total_spend * 100:.0f}% of gross). "
+    f"Data through {date_max.strftime('%b %Y')} — {date_max.year} is a partial "
+    "year, called out explicitly wherever it affects a comparison."
 )
 
 st.divider()
 
 # --- Hero chart: annual spend, quick visual orientation before the deep dives ---
-annual = df.groupby("year")["Total Amount"].sum().reset_index()
+# Stacked so bar height stays gross: solid = kept, faded cap = refunded back.
+annual = annual_spend(df)
 fig = go.Figure()
 fig.add_bar(
-    x=annual["year"], y=annual["Total Amount"],
-    marker_color=category_color(0),
-    hovertemplate="%{x}: $%{y:,.0f}<extra></extra>",
+    x=annual["year"], y=annual["net"], name="Kept",
+    marker_color=category_color(0), hoverinfo="skip",
 )
-apply_layout(fig, title="Total spend by year", y_title="Spend ($)")
+fig.add_bar(
+    x=annual["year"], y=annual["refund"], name="Refunded",
+    marker_color=category_color_rgba(0, 0.3), hoverinfo="skip",
+)
+# One invisible series carries the whole hover block, so its row order is
+# independent of the legend: legend reads Kept -> Refunded (trace order), while
+# the hover leads with Refunded to match the faded cap, then Kept, then Spent.
+# A single trace only gets one hover swatch, so colour each row inline instead.
+def _sw(color):
+    return f"<span style='color:{color}'>■</span> "
+
+fig.add_scatter(
+    x=annual["year"], y=annual["gross"], mode="markers",
+    marker=dict(color="rgba(0,0,0,0)"), showlegend=False,
+    customdata=annual[["refund", "net", "gross"]].to_numpy(),
+    hovertemplate=(
+        f"{_sw(category_color_rgba(0, 0.5))}Refunded: $%{{customdata[0]:,.0f}}<br>"
+        f"{_sw(category_color(0))}Kept: $%{{customdata[1]:,.0f}}<br>"
+        f"{_sw(INK_SECONDARY)}Spent: $%{{customdata[2]:,.0f}}<extra></extra>"
+    ),
+)
+# barmode="stack" defaults the legend to reversed; force natural order so the
+# legend leads with "Kept".
+fig.update_layout(barmode="stack", legend_traceorder="normal")
+apply_layout(fig, title="Spend by year: kept vs. refunded", y_title="Spend ($)")
 fig.update_xaxes(type="category")
 st.plotly_chart(fig, use_container_width=True, theme=None)
+st.caption(
+    "Bar height is gross spend; the solid part is what I kept, the faded cap is "
+    "refunded back. Refunds are counted in the year the order was placed. Refund "
+    "totals are de-duplicated from Amazon's export (it repeats each refund across "
+    "internal retries); 2018–19 and 2023 ran unusually high."
+)
 
 st.divider()
 
