@@ -10,11 +10,14 @@ import plotly.graph_objects as go
 from src.data_loader import load_orders, monthly_spend_series, is_partial_year
 from src.spend_decomposition import decompose_growth
 from src.timeseries import decompose as stl_decompose, fit_holt_winters, forecast as hw_forecast
-from src.style import apply_layout, category_color, setup_page_style, FORECAST_BAND
+from src.style import (
+    apply_layout, category_color, setup_page_style,
+    FORECAST_BAND, PARTIAL_YEAR_FILL, GRID, INK_MUTED,
+)
 
 st.set_page_config(page_title="Spending Trends", page_icon="📈", layout="wide")
 setup_page_style()
-st.title("📈 Spending Trends")
+st.title("Spending Trends")
 
 df = load_orders()
 LAST_FULL_YEAR = 2025  # 2026 is partial (through Aug) as of this data pull
@@ -62,19 +65,23 @@ annual["Avg item price"] = annual["avg_item_price"] / base["avg_item_price"] * 1
 fig = go.Figure()
 series = ["Total spend", "Orders", "Items per order", "Avg item price"]
 for i, name in enumerate(series):
+    is_total = name == "Total spend"
     fig.add_scatter(
-        x=annual["year"], y=annual[name], name=name, mode="lines+markers",
-        line=dict(width=3 if name == "Total spend" else 2, color=category_color(i),
-                   dash="solid" if name == "Total spend" else "dot"),
-        marker=dict(size=7),
+        x=annual["year"], y=annual[name], name=name,
+        mode="lines+markers" if is_total else "lines",
+        line=dict(width=3.5 if is_total else 2, color=category_color(i), dash="solid"),
+        marker=dict(size=6),
+        opacity=1 if is_total else 0.8,
         hovertemplate=f"{name}: " + "%{y:.0f} (2018=100)<extra></extra>",
     )
-fig.add_hline(y=100, line_dash="dot", line_color="#c8c8c8", annotation_text="2018 baseline")
-fig.add_vrect(x0=2025.5, x1=annual["year"].max() + 0.5, fillcolor="#e8e8e8", opacity=0.4,
-              line_width=0, annotation_text="partial year", annotation_position="top left")
-apply_layout(fig, title="Growth drivers, indexed to 2018 = 100", y_title="Index (2018 = 100)")
-fig.update_xaxes(type="category")
-st.plotly_chart(fig, use_container_width=True)
+fig.add_hline(y=100, line_dash="dot", line_color=GRID,
+              annotation_text="2018 baseline", annotation_font_color=INK_MUTED)
+fig.add_vrect(x0=2025.5, x1=annual["year"].max() + 0.5, fillcolor=PARTIAL_YEAR_FILL,
+              line_width=0, annotation_text="partial year", annotation_position="top left",
+              annotation_font_color=INK_MUTED)
+apply_layout(fig, title="Growth drivers, indexed to 2018 = 100", y_title="Index (2018 = 100)", x_title="Year")
+fig.update_xaxes(dtick=1)
+st.plotly_chart(fig, use_container_width=True, theme=None)
 st.caption(
     "Each line is that factor's own year vs. 2018, so 'Orders' at 269 in 2025 means "
     "2.7x as many orders as 2018, independent of what price or basket size did. "
@@ -99,18 +106,18 @@ decomp = stl_decompose(s, period=12)
 
 fig2 = go.Figure()
 fig2.add_scatter(x=decomp.index, y=decomp["observed"], name="Observed", mode="lines",
-                  line=dict(color="#c8c8c8", width=1.5))
+                  line=dict(color=INK_MUTED, width=1.5))
 fig2.add_scatter(x=decomp.index, y=decomp["trend"], name="Trend", mode="lines",
                   line=dict(color=category_color(0), width=3))
 apply_layout(fig2, title="Monthly spend: observed vs. trend", y_title="Spend ($)")
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(fig2, use_container_width=True, theme=None)
 
 fig3 = go.Figure()
 fig3.add_bar(x=decomp.index, y=decomp["seasonal"], marker_color=category_color(1),
              hovertemplate="%{x|%b %Y}: $%{y:.0f}<extra></extra>")
-fig3.add_hline(y=0, line_color="#c8c8c8")
+fig3.add_hline(y=0, line_color=GRID)
 apply_layout(fig3, title="Seasonal component", y_title="$ vs. seasonally-typical month")
-st.plotly_chart(fig3, use_container_width=True)
+st.plotly_chart(fig3, use_container_width=True, theme=None)
 st.caption(
     "December consistently runs highest (holiday spending), spring/late-summer "
     "months tend to run below the seasonally-adjusted trend."
@@ -126,7 +133,7 @@ fitted = fit_holt_winters(s, period=12)
 fc = hw_forecast(fitted, steps=12)
 
 fig4 = go.Figure()
-fig4.add_scatter(x=s.index, y=s.values, name="Actual", mode="lines", line=dict(color="#8c8c8c", width=1.5))
+fig4.add_scatter(x=s.index, y=s.values, name="Actual", mode="lines", line=dict(color=INK_MUTED, width=1.5))
 fig4.add_scatter(
     x=pd.concat([pd.Series(fc.index), pd.Series(fc.index[::-1])]),
     y=pd.concat([fc["upper_95"], fc["lower_95"][::-1]]),
@@ -136,7 +143,7 @@ fig4.add_scatter(
 fig4.add_scatter(x=fc.index, y=fc["forecast"], name="Forecast", mode="lines+markers",
                   line=dict(color=category_color(0), width=3, dash="dash"))
 apply_layout(fig4, title="Holt-Winters forecast (statsmodels)", y_title="Spend ($)")
-st.plotly_chart(fig4, use_container_width=True)
+st.plotly_chart(fig4, use_container_width=True, theme=None)
 
 next12_sum = fc["forecast"].sum()
 last12_sum = s.iloc[-12:].sum()
