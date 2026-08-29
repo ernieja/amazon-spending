@@ -53,10 +53,10 @@ col4.metric("Return rate", f"{return_rate*100:.1f}%", help="Share of orders with
 col5.metric("Top category", top_category.split(" & ")[0], help=f"Full label: {top_category}")
 
 st.caption(
-    f"Net of refunds: \\${net_spend:,.0f} — \\${total_refunds:,.0f} came back "
-    f"({total_refunds / total_spend * 100:.0f}% of gross). "
-    f"Data through {date_max.strftime('%b %Y')} — {date_max.year} is a partial "
-    "year, called out explicitly wherever it affects a comparison."
+    f"Net of refunds: \\${net_spend:,.0f}, after \\${total_refunds:,.0f} "
+    f"({total_refunds / total_spend * 100:.0f}% of gross) came back. "
+    f"Data runs through {date_max.strftime('%b %Y')}; {date_max.year} is a "
+    "partial year, flagged wherever it affects a comparison."
 )
 
 st.divider()
@@ -95,7 +95,7 @@ fig.add_scatter(
 fig.update_layout(barmode="stack", legend_traceorder="normal")
 apply_layout(fig, title="Spend by year: kept vs. refunded", y_title="Spend ($)")
 fig.update_xaxes(type="category")
-st.plotly_chart(fig, use_container_width=True, theme=None)
+st.plotly_chart(fig, width='stretch', theme=None)
 st.caption(
     "Bar height is gross spend; the solid part is what I kept, the faded cap is "
     "refunded back. Refunds are counted in the year the order was placed. Refund "

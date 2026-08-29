@@ -93,11 +93,11 @@ def apply_layout(
         ),
     )
     fig.update_xaxes(
-        title=x_title, showgrid=False, linecolor=GRID,
+        title=x_title, showgrid=False, linecolor=GRID, automargin=True,
         tickfont=dict(color=INK_SECONDARY), title_font=dict(color=INK_SECONDARY),
     )
     fig.update_yaxes(
-        title=y_title, showgrid=True, gridcolor=GRID,
+        title=y_title, showgrid=True, gridcolor=GRID, automargin=True,
         zeroline=True, zerolinecolor=GRID,
         tickfont=dict(color=INK_SECONDARY), title_font=dict(color=INK_SECONDARY),
     )

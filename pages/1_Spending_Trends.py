@@ -43,7 +43,7 @@ c4.metric("From item price changes", f"{d['price_growth_pct']:+.0f}%")
 st.caption(
     "Price changes are *negative*: the average item you buy actually got "
     "cheaper over this period. Growth came entirely from ordering more often "
-    "and buying more per order — if prices hadn't dropped, growth would have "
+    "and buying more per order - if prices hadn't dropped, growth would have "
     "been even larger."
 )
 
@@ -86,7 +86,7 @@ st.caption(
     "Each line is that factor's own year vs. 2018, so 'Orders' at 269 in 2025 means "
     "2.7x as many orders as 2018, independent of what price or basket size did. "
     "Total spend is, by construction, the product of the other three (divided by "
-    "100²) — you can see it track whichever factor moves most."
+    "100²) - you can see it track whichever factor moves most."
 )
 
 st.divider()
@@ -150,7 +150,7 @@ last12_sum = s.iloc[-12:].sum()
 st.metric("Forecast: next 12 months", f"${next12_sum:,.0f}",
           delta=f"{(next12_sum/last12_sum-1)*100:+.0f}% vs. last 12 months")
 st.caption(
-    "The interval is intentionally wide — monthly personal spend is genuinely "
+    "The interval is intentionally wide - monthly personal spend is genuinely "
     "noisy with only ~100 data points behind this model, so a wide honest "
     "interval beats a falsely precise point estimate. Interval built from Monte "
     "Carlo simulation of the fitted model's error distribution, not a "
