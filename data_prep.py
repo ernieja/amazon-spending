@@ -166,7 +166,33 @@ def load_refunds():
     df = clean_placeholders(df)
     df["Refund Amount"] = pd.to_numeric(df["Refund Amount"], errors="coerce")
     df["Refund Date"] = pd.to_datetime(df["Refund Date"], format="ISO8601", errors="coerce")
+
     df["is_return_related_refund"] = df["Reversal Reason"].isin(RETURN_RELATED_REASONS)
+
+    # The Refund Details export repeats each refund once per internal retry: the
+    # "Creation Date" differs but the amount and refund date do not. Summing the
+    # raw rows per order over-counts refunds 2-3x (some orders end up with a
+    # "refund" larger than the order itself). Collapse to one row per distinct
+    # (Order ID, Refund Amount, Refund Date). Cross-checked against an
+    # independent order-history scrape whose own pre-cleaned refund totals match
+    # this exactly for 2024 and 2025. Trade-off: two genuinely separate refunds
+    # of the same amount on the same day for one order would merge, but that is
+    # far rarer than the retry duplication being removed here.
+    #
+    # Retry rows for one refund sometimes carry different reasons (e.g. an early
+    # "Customer return" row and a later "Account adjustment" row). Sort the
+    # return-related rows first so drop_duplicates keeps the more specific
+    # reason and the return-related flag survives.
+    before = len(df)
+    df = (
+        df.sort_values("is_return_related_refund", ascending=False, kind="stable")
+        .drop_duplicates(subset=["Order ID", "Refund Amount", "Refund Date"])
+    )
+    dropped = before - len(df)
+    if dropped:
+        print(f"load_refunds: dropped {dropped} duplicate refund rows "
+              f"({before} -> {len(df)})")
+
     return df
 
 
@@ -219,7 +245,7 @@ def main():
 
     print(f"Loaded {len(orders)} order line items ({orders['Order ID'].nunique()} unique orders)")
     print(f"Loaded {len(returns)} return records")
-    print(f"Loaded {len(refunds)} refund records")
+    print(f"Loaded {len(refunds)} refund records (after de-duplication)")
     print(f"Matched {merged['is_returned'].sum()} order line items to a return "
           f"({merged.loc[merged['is_returned'], 'Order ID'].nunique()} unique orders)")
     n_refunded_orders = merged.loc[merged['is_refunded'], 'Order ID'].nunique()
