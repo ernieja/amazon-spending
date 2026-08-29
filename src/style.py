@@ -73,7 +73,7 @@ def apply_layout(
     fig.update_layout(
         title=dict(
             text=title, x=0, xanchor="left", xref="paper",
-            y=1, yanchor="top", yref="container",
+            y=1, yanchor="top", yref="container", pad=dict(t=8),
             font=dict(size=15, color=INK_PRIMARY),
         ) if title else None,
         template="plotly_dark",
