@@ -4,7 +4,7 @@ Fifteen years of my real Amazon order history (2011–2026), coming from Amazon'
 and a closer look at Whole Foods grocery purchases. Built with pandas, statsmodels,
 and plotly.
 
-https://amazon-spending-zmypvyzhumnxejehx54tdy.streamlit.app/
+https://amazon-spending.streamlit.app/
 
 ~\$22k of gross spend across 489 orders.
 
