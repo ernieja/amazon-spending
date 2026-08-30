@@ -195,6 +195,35 @@ st.caption(
     "drift year to year rather than fitting one fixed monthly profile."
 )
 
+# The tall March bar invites a "what do I always buy in March?" reading, so
+# break each year's March spend out by category. Same basis as the
+# decomposition: grocery out, big-ticket per the toggle above.
+mar = df[df["year_month"].dt.month == 3]
+if exclude_bt:
+    mar = mar[mar["Total Amount"] < big_ticket_threshold(exclude_grocery=True)]
+cat_rank = list(df.groupby("category")["Total Amount"].sum().sort_values(ascending=False).index)
+mar_piv = (
+    mar.pivot_table("Total Amount", "year", "category", "sum", fill_value=0)
+    .reindex(range(2018, int(df["year"].max()) + 1), fill_value=0)
+)
+fig3b = go.Figure()
+for c in [c for c in cat_rank if c in mar_piv.columns and mar_piv[c].sum() > 0]:
+    fig3b.add_bar(x=mar_piv.index, y=mar_piv[c], name=c,
+                  marker_color=category_color(cat_rank.index(c)),
+                  hovertemplate=f"{c}: $%{{y:,.0f}}<extra></extra>")
+fig3b.update_layout(barmode="stack", legend_traceorder="normal")
+apply_layout(fig3b, title="March spend by category, each year", y_title="March spend ($)")
+fig3b.update_xaxes(type="category")
+st.plotly_chart(fig3b, width="stretch", theme=None)
+st.caption(
+    "It isn't a recurring habit. March 2018-19 had no non-grocery orders at "
+    "all; 2020, 2021 and 2024 land around a normal month. Only 2023, 2025, and "
+    "2026 stand out, and each was carried by a different category (Home & "
+    "Kitchen, then Electronics, then Clothing). The seasonal bar is tall "
+    "because STL's drifting seasonal picks up those two big recent Marches, "
+    "not because March is an annual driver the way December might be because of the holidays."
+)
+
 st.divider()
 
 # ---------------------------------------------------------------------------

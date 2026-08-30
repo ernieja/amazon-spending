@@ -70,8 +70,8 @@ apply_layout(fig, title="Spend by category and year", y_title="Spend ($)")
 fig.update_xaxes(type="category")
 st.plotly_chart(fig, width="stretch", theme=None)
 st.caption(
-    "Books carried the early years; a Clothing binge in 2018-19; Grocery and "
-    "Pet only show up from 2021. Electronics is the one constant. **Other** is "
+    "Books carried the early years (college); a Clothing binge in 2018-19; Grocery and "
+    "Pet only show up from 2021 (got a cat). Electronics is the one constant. **Other** is "
     f"down to \\${other_spend:,.0f} "
     f"({other_spend / total_spend * 100:.0f}%, {other_items} line items): mostly "
     "print books listed by title with no keyword to catch them (\"Yes Please\", "
