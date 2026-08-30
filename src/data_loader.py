@@ -15,6 +15,12 @@ PROCESSED_PATH = "data/processed_orders.csv"
 # monthly seasonality to mean anything -- see README for the full note.
 TIMESERIES_START = "2018-01-01"
 
+# Line items at or above this percentile of ``Total Amount`` count as
+# "big-ticket" one-off purchases -- a single ~$500 buy in an otherwise
+# ~$150 month distorts the STL trend and the Holt-Winters fit, so the
+# monthly series can optionally drop them. 99th percentile is ~5 items.
+BIG_TICKET_PCT = 0.99
+
 
 @st.cache_data
 def load_orders() -> pd.DataFrame:
@@ -44,17 +50,59 @@ def annual_spend(_df: pd.DataFrame = None) -> pd.DataFrame:
     return out.reset_index()
 
 
+def _timeseries_frame(exclude_grocery: bool) -> pd.DataFrame:
+    """load_orders() restricted to the monthly-series window (TIMESERIES_START
+    onward), with grocery optionally dropped. Shared basis for the monthly
+    series and the big-ticket cutoff so both see exactly the same line items."""
+    df = load_orders()
+    if exclude_grocery:
+        df = df[~df["is_grocery"]]
+    return df[df["year_month"] >= pd.Timestamp(TIMESERIES_START)]
+
+
+def big_ticket_threshold(exclude_grocery: bool = False, pct: float = BIG_TICKET_PCT) -> float:
+    """Dollar value at percentile ``pct`` of line-item ``Total Amount`` over the
+    monthly-series window. Items at or above this are treated as big-ticket."""
+    return _timeseries_frame(exclude_grocery)["Total Amount"].quantile(pct)
+
+
 @st.cache_data
-def monthly_spend_series(exclude_grocery: bool = False) -> pd.Series:
+def big_ticket_items(exclude_grocery: bool = False, pct: float = BIG_TICKET_PCT) -> pd.DataFrame:
+    """The line items that ``monthly_spend_series(exclude_big_ticket=True)``
+    removes, most expensive first, with the columns worth showing in a table."""
+    df = _timeseries_frame(exclude_grocery)
+    thr = df["Total Amount"].quantile(pct)
+    cols = ["Order Date", "Product Name", "category", "Total Amount"]
+    return (
+        df.loc[df["Total Amount"] >= thr, cols]
+        .sort_values("Total Amount", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+@st.cache_data
+def monthly_spend_series(
+    exclude_grocery: bool = False,
+    exclude_big_ticket: bool = False,
+    big_ticket_pct: float = BIG_TICKET_PCT,
+) -> pd.Series:
     """Continuous monthly total-spend series from TIMESERIES_START through
     the last observed month, zero-filled on months with no orders.
 
     ``exclude_grocery`` drops Whole Foods (panda01) line items -- grocery only
     starts mid-2021 and is intermittent, so it's a structural break rather than
-    part of the retail-spending trend (it has its own page)."""
+    part of the retail-spending trend (it has its own page).
+
+    ``exclude_big_ticket`` drops line items at or above the ``big_ticket_pct``
+    percentile of ``Total Amount`` (default 99th, ~5 items) so one large one-off
+    purchase doesn't bend the STL trend or widen the Holt-Winters interval. The
+    removed items are listed by ``big_ticket_items()``."""
     df = load_orders()
     if exclude_grocery:
         df = df[~df["is_grocery"]]
+    if exclude_big_ticket:
+        thr = big_ticket_threshold(exclude_grocery, big_ticket_pct)
+        df = df[df["Total Amount"] < thr]
     monthly = df.groupby("year_month")["Total Amount"].sum()
     full_idx = pd.date_range(TIMESERIES_START, monthly.index.max(), freq="MS")
     s = monthly.reindex(full_idx, fill_value=0.0)

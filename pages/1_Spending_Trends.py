@@ -7,7 +7,10 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-from src.data_loader import load_orders, monthly_spend_series, is_partial_year
+from src.data_loader import (
+    load_orders, monthly_spend_series, big_ticket_items, big_ticket_threshold,
+    is_partial_year, BIG_TICKET_PCT,
+)
 from src.spend_decomposition import decompose_growth
 from src.timeseries import decompose as stl_decompose, fit_holt_winters, forecast as hw_forecast
 from src.style import (
@@ -137,11 +140,39 @@ st.subheader("Trend, seasonality, and noise in monthly spend")
 st.write(
     "Monthly spend from 2018 onward (pre-2018 order volume is too sparse, "
     "as low as 1-2 orders/month, for monthly seasonality to mean anything), "
-    "decomposed via STL (Seasonal-Trend decomposition using LOESS)."
+    "decomposed via STL (Seasonal-Trend decomposition using LOESS). Big-ticket "
+    "one-off purchases are excluded by default so a single large buy doesn't "
+    "bend the trend line or widen the forecast below."
 )
 
-s = monthly_spend_series(exclude_grocery=True)
+exclude_bt = st.toggle(
+    f"Exclude big-ticket purchases (top {(1 - BIG_TICKET_PCT) * 100:g}% by item price)",
+    value=True,
+    help="Drops line items at or above the "
+         f"{BIG_TICKET_PCT * 100:g}th percentile of Total Amount over the "
+         "2018-onward window. STL is already run with robust=True, which "
+         "down-weights outlier months, but this also keeps them out of the "
+         "observed line and the Holt-Winters fit.",
+)
+
+s = monthly_spend_series(exclude_grocery=True, exclude_big_ticket=exclude_bt)
 decomp = stl_decompose(s, period=12)
+
+if exclude_bt:
+    bt = big_ticket_items(exclude_grocery=True)
+    thr = big_ticket_threshold(exclude_grocery=True)
+    with st.expander(
+        f"Which {len(bt)} purchases are excluded? "
+        f"(≥ ${thr:,.0f}, ${bt['Total Amount'].sum():,.0f} total)"
+    ):
+        st.dataframe(
+            bt.assign(**{"Order Date": bt["Order Date"].dt.date}),
+            hide_index=True,
+            width="stretch",
+            column_config={
+                "Total Amount": st.column_config.NumberColumn("Total Amount", format="$%.2f"),
+            },
+        )
 
 fig2 = go.Figure()
 fig2.add_scatter(x=decomp.index, y=decomp["observed"], name="Observed", mode="lines",
@@ -158,8 +189,10 @@ fig3.add_hline(y=0, line_color=GRID)
 apply_layout(fig3, title="Seasonal component", y_title="$ vs. seasonally-typical month")
 st.plotly_chart(fig3, width='stretch', theme=None)
 st.caption(
-    "December consistently runs highest (holiday spending), spring/late-summer "
-    "months tend to run below the seasonally-adjusted trend."
+    "March is the biggest month above the seasonally-adjusted trend, with July "
+    "second and May the furthest below. December swings from slightly negative "
+    "in 2018-19 to well above trend by 2025, since STL lets the seasonal shape "
+    "drift year to year rather than fitting one fixed monthly profile."
 )
 
 st.divider()
