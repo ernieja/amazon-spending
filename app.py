@@ -47,8 +47,7 @@ col1.metric(
 col2.metric("Unique orders", f"{total_orders:,}")
 col3.metric("Date range", f"{date_min.year}–{date_max.year}")
 col4.metric("Return rate", f"{return_rate*100:.1f}%", help="Share of orders with at least one return, by unique Order ID.")
-# Category labels are long compound names ("Electronics & Accessories"); st.metric
-# renders the value on one line and ellipsis-truncates it in a 5-across row, so
+# Category labels are long compound names ("Electronics & Accessories"), so
 # show the short head and keep the full label in the tooltip.
 col5.metric("Top category", top_category.split(" & ")[0], help=f"Full label: {top_category}")
 

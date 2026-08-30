@@ -259,7 +259,10 @@ def derive_grocery_subcategory(product_name):
     return "Other Grocery"
 
 
-def derive_category(product_name, is_grocery, website=None):
+ISBN10_ASIN = re.compile(r"\d{9}[\dX]")
+
+
+def derive_category(product_name, is_grocery, website=None, asin=None):
     if is_grocery:
         return "Grocery"
     if website == "Audible":
@@ -275,6 +278,11 @@ def derive_category(product_name, is_grocery, website=None):
                     return category
             elif kw in tokens or (kw + "s") in tokens:
                 return category
+    # Print books use the ISBN-10 as their ASIN; physical products get a "B0..." ASIN. 
+    # Fall back to the ASIN shape here after keywords, so an ISBN-bearing
+    # planner or novelty (Moleskine, Magnetic Poetry) keeps its keyword category.
+    if isinstance(asin, str) and ISBN10_ASIN.fullmatch(asin):
+        return "Books & Media"
     return "Other"
 
 
@@ -285,9 +293,9 @@ def load_orders():
     df["Ship Date"] = pd.to_datetime(df["Ship Date"], format="ISO8601", errors="coerce")
     df["is_grocery"] = df["Website"] == "panda01"
     df["category"] = [
-        derive_category(name, grocery, site)
-        for name, grocery, site in zip(
-            df["Product Name"], df["is_grocery"], df["Website"]
+        derive_category(name, grocery, site, asin)
+        for name, grocery, site, asin in zip(
+            df["Product Name"], df["is_grocery"], df["Website"], df["ASIN"]
         )
     ]
     df["grocery_subcategory"] = df["Product Name"].where(df["is_grocery"]).apply(

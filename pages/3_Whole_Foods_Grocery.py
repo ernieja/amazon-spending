@@ -107,6 +107,7 @@ fig2.add_bar(
     ),
 )
 apply_layout(fig2, title="Spend by subcategory", y_title=None, x_title="Spend ($)")
+fig2.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig2, width="stretch", theme=None)
 
 sub_by_price = sub.sort_values("avg_item")
@@ -119,6 +120,7 @@ fig3.add_bar(
 )
 apply_layout(fig3, title="Average line-item price by subcategory",
              y_title=None, x_title="Price per line item ($)")
+fig3.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig3, width="stretch", theme=None)
 st.caption(
     "Subcategories are keyword-tagged from product names (Amazon doesn't export "
@@ -231,6 +233,7 @@ for label in row_order:
 apply_layout(fig4, title="Fixed-size repeat items: unit price at each purchase",
              y_title=None, x_title=None, height=360)
 fig4.update_yaxes(categoryorder="array", categoryarray=row_order)
+fig4.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig4, width="stretch", theme=None)
 st.caption(
     "The two milks moved ~4% in opposite directions; the spinach salad's one dip "

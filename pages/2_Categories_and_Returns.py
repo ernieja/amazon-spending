@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.data_loader import load_orders
-from src.style import apply_layout, category_color, setup_page_style
+from src.style import apply_layout, category_color, setup_page_style, INK_MUTED
 
 st.set_page_config(page_title="Categories & Returns", page_icon="🏷️", layout="wide")
 setup_page_style()
@@ -63,25 +63,34 @@ for i, c in enumerate(top_cats + ["Other categories"]):  # biggest added first =
         x=by_yc.index, y=by_yc[c], name=c,
         marker_color=category_color(7) if c == "Other categories"
         else category_color(i),
-        hovertemplate=f"{c}: $%{{y:,.0f}}<extra></extra>",
+        hovertemplate=f"%{{x}}<br>{c}: $%{{y:,.0f}}<extra></extra>",
     )
 fig.update_layout(barmode="stack", legend_traceorder="normal")
 apply_layout(fig, title="Spend by category and year", y_title="Spend ($)")
 fig.update_xaxes(type="category")
+fig.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig, width="stretch", theme=None)
 st.caption(
     "Books carried the early years (college); a Clothing binge in 2018-19; Grocery and "
     "Pet only show up from 2021 (got a cat). Electronics is the one constant. **Other** is "
     f"down to \\${other_spend:,.0f} "
-    f"({other_spend / total_spend * 100:.0f}%, {other_items} line items): mostly "
-    "print books listed by title with no keyword to catch them (\"Yes Please\", "
-    "\"Eating Animals\"), plus gift cards, a bottle of wine and a ukulele. "
-    "Audiobooks route to Books & Media by their Audible source."
+    f"({other_spend / total_spend * 100:.0f}%, {other_items} line items): three "
+    "gift cards, a ukulele, two bottles of wine, and a few oddments (lye, fridge "
+    "magnets, a bike tube). Print books that were listed by title with no "
+    "catchable keyword (\"Yes Please\", \"Eating Animals\") now route to Books & "
+    "Media by their ISBN-format ASIN; audiobooks route there by their Audible source."
 )
 
 # Price per line item, by category: is a big category big because of volume or
-# because the things in it cost more?
+# because the things in it cost more? 
 priced = df[df["Total Amount"] > 0]
+psize = priced.groupby("category").agg(n=("ASIN", "size"), spend=("Total Amount", "sum"))
+order = [c for c in cat.index if c in psize.index]  # ascending by spend -> largest on top
+tick_txt = [
+    f"{c}<br><span style='font-size:0.90em;color:{INK_MUTED}'>"
+    f"{psize.loc[c, 'n']} items &#183; ${psize.loc[c, 'spend']:,.0f}</span>"
+    for c in order
+]
 fig1b = go.Figure()
 fig1b.add_box(
     x=priced["Total Amount"], y=priced["category"], orientation="h",
@@ -89,18 +98,25 @@ fig1b.add_box(
     marker=dict(color=BUY, size=4, opacity=0.5),
 )
 apply_layout(fig1b, title="Price per line item, by category", y_title=None,
-             x_title="Line-item price ($, log scale)", height=580)
-fig1b.update_layout(hovermode="closest")
+             x_title="Line-item price ($, log scale)", height=600)
+# "y unified" collapses the seven box stats (min/q1/median/q3/max + fences) into
+# one tooltip per row instead of seven rotated, overlapping labels; dollars.
+fig1b.update_layout(hovermode="y unified")
+fig1b.update_traces(hoveron="boxes")
 fig1b.update_xaxes(type="log", tickvals=[1, 3, 10, 30, 100, 300],
-                   ticktext=["$1", "$3", "$10", "$30", "$100", "$300"])
-fig1b.update_yaxes(categoryorder="array", categoryarray=list(cat.index))
+                   ticktext=["$1", "$3", "$10", "$30", "$100", "$300"],
+                   hoverformat="$,.2f")
+fig1b.update_yaxes(categoryorder="array", categoryarray=order,
+                   tickmode="array", tickvals=order, ticktext=tick_txt)
 st.plotly_chart(fig1b, width="stretch", theme=None)
 st.caption(
-    "Electronics is the biggest category from a mix of both: 96 items (second "
-    "only to Home & Kitchen) *and* a long right tail. Its median line item is "
-    "~\\$29, about the same as Clothing or Home, but the mean is ~\\$76 because "
-    "of the laptop, TVs and turntable sitting out past \\$300. Pet and Outdoors "
-    "run a higher median but on far fewer items."
+    "Rows are ordered by total category spend (largest at top); each label's "
+    "second line is its line-item count and dollars. Electronics is the biggest spend "
+    "from a mix of both: 96 priced items *and* a long right tail. "
+    "Its median line item is ~\\$29, about the same as Clothing "
+    "or Home, but the mean is ~\\$76 because of the laptop, TVs and turntable "
+    "sitting out past \\$300. Pet and Outdoors run a higher median but on far "
+    "fewer items."
 )
 
 st.divider()
@@ -137,6 +153,7 @@ fig2.add_bar(
 )
 apply_layout(fig2, title="Return rate by category", y_title=None,
              x_title="% of orders with a return")
+fig2.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig2, width="stretch", theme=None)
 
 # Fold ~20 raw return reasons into a handful of buckets.
@@ -161,23 +178,52 @@ _REASON_BUCKETS = {
 }
 _reason_to_bucket = {r: b for b, rs in _REASON_BUCKETS.items() for r in rs}
 
-returned = df[df["is_returned"]].drop_duplicates("Order ID")
-counts = {b: 0 for b in _REASON_BUCKETS}
-for reasons in returned["return_reasons"].dropna():
-    hit = {
-        _reason_to_bucket.get(r.strip(), "Other / unknown")
-        for r in reasons.split("; ")
-    }
-    for b in hit:
-        counts[b] += 1
-rb = pd.Series(counts).sort_values()
+# Break each reason bucket out by the order's dominant (highest-spend) category
+# -- same attribution as the return-rate chart. Four categories carry it; the
+# rest roll into "Other categories", and colors match the first chart.
+RET_TOP = ["Clothing & Shoes", "Electronics & Accessories",
+           "Home & Kitchen", "Outdoors & Sporting"]
 
+ret_orders = orders[orders["is_returned"]].copy()
+ret_orders["cat"] = ret_orders["category_dom"].where(
+    ret_orders["category_dom"].isin(RET_TOP), "Other categories")
+
+
+def _reason_buckets(reasons):
+    if not isinstance(reasons, str):
+        return {"Other / unknown"}
+    return {_reason_to_bucket.get(r.strip(), "Other / unknown")
+            for r in reasons.split("; ")}
+
+
+rc = pd.DataFrame(
+    [(b, c) for reasons, c in zip(ret_orders["return_reasons"], ret_orders["cat"])
+     for b in _reason_buckets(reasons)],
+    columns=["bucket", "cat"],
+)
+bucket_pivot = (
+    rc.pivot_table(index="bucket", columns="cat", aggfunc="size", fill_value=0)
+    .reindex(rc["bucket"].value_counts().sort_values().index)  # small buckets at bottom
+)
+
+n_returned = int(orders["is_returned"].sum())
 fig3 = go.Figure()
-fig3.add_bar(x=rb.values, y=rb.index, orientation="h", marker_color=RET,
-             hovertemplate="%{y}: %{x} orders<extra></extra>")
-apply_layout(fig3, title=f"Why things came back ({len(returned)} returned orders, "
-             "some with more than one reason)", y_title=None, x_title="Orders")
+for c in RET_TOP + ["Other categories"]:
+    if c not in bucket_pivot:
+        continue
+    color = category_color(7) if c == "Other categories" else category_color(top_cats.index(c))
+    fig3.add_bar(x=bucket_pivot[c], y=bucket_pivot.index, orientation="h",
+                 name=c, marker_color=color,
+                 hovertemplate=f"%{{y}}<br>{c}: %{{x}} orders<extra></extra>")
+fig3.update_layout(barmode="stack", legend_traceorder="normal")
+apply_layout(fig3, title=f"Why things came back, by category ({n_returned} returned "
+             "orders, some with more than one reason)", y_title=None, x_title="Orders")
+fig3.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig3, width="stretch", theme=None)
+st.caption(
+    "Fit and size returns are almost all Clothing (20 of 21); *changed my mind* "
+    "is the one bucket led by Electronics and Home & Kitchen rather than clothes."
+)
 
 cl = by_cat.loc["Clothing & Shoes"]
 total_refund = orders["refund_amount"].sum()

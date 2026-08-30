@@ -66,7 +66,7 @@ def apply_layout(
     title: str = None,
     y_title: str = None,
     x_title: str = None,
-    height: int = 360,
+    height: int = 390,
 ) -> go.Figure:
     """Common layout: transparent panel, recessive grid, title stacked above
     the legend so the two never collide."""

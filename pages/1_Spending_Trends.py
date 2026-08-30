@@ -22,11 +22,10 @@ st.set_page_config(page_title="Spending Trends", page_icon="📈", layout="wide"
 setup_page_style()
 st.title("Spending Trends")
 
-# Grocery (Whole Foods delivery) is excluded from this whole page: it only
-# starts mid-2021, is intermittent, and behaves nothing like the rest (many
-# ~$5 items per order). Left in, it dominates the item counts and drags the
-# average price down, turning the decomposition into a story about adopting a
-# grocery channel rather than about retail-spending growth. It has its own page.
+# Grocery (Whole Foods delivery) is excluded from this whole page. Left in, 
+# it dominates the item counts and drags the average price down, turning the 
+# decomposition into a story about adopting a grocery channel rather than about 
+# retail-spending growth. It has its own page.
 df = load_orders()
 df = df[~df["is_grocery"]].copy()
 LAST_FULL_YEAR = 2025  # 2026 is partial (through Aug) as of this data pull
@@ -84,7 +83,7 @@ for i, name in enumerate(series):
         line=dict(width=3.5 if is_total else 2, color=category_color(i), dash="solid"),
         marker=dict(size=6),
         opacity=1 if is_total else 0.8,
-        hovertemplate=f"{name}: " + "%{y:.0f} (2018=100)<extra></extra>",
+        hovertemplate=f"{name}: " + "%{y:.0f}<extra></extra>",
     )
 fig.add_hline(y=100, line_dash="dot", line_color=GRID,
               annotation_text="2018 baseline", annotation_font_color=INK_MUTED)
@@ -140,7 +139,7 @@ st.subheader("Trend, seasonality, and noise in monthly spend")
 st.write(
     "Monthly spend from 2018 onward (pre-2018 order volume is too sparse, "
     "as low as 1-2 orders/month, for monthly seasonality to mean anything), "
-    "decomposed via STL (Seasonal-Trend decomposition using LOESS). Big-ticket "
+    "decomposed via Seasonal-Trend decomposition using LOESS. Big-ticket "
     "one-off purchases are excluded by default so a single large buy doesn't "
     "bend the trend line or widen the forecast below."
 )
@@ -210,10 +209,11 @@ fig3b = go.Figure()
 for c in [c for c in cat_rank if c in mar_piv.columns and mar_piv[c].sum() > 0]:
     fig3b.add_bar(x=mar_piv.index, y=mar_piv[c], name=c,
                   marker_color=category_color(cat_rank.index(c)),
-                  hovertemplate=f"{c}: $%{{y:,.0f}}<extra></extra>")
+                  hovertemplate=f"%{{x}}<br>{c}: $%{{y:,.0f}}<extra></extra>")
 fig3b.update_layout(barmode="stack", legend_traceorder="normal")
 apply_layout(fig3b, title="March spend by category, each year", y_title="March spend ($)")
 fig3b.update_xaxes(type="category")
+fig3b.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig3b, width="stretch", theme=None)
 st.caption(
     "It isn't a recurring habit. March 2018-19 had no non-grocery orders at "
@@ -221,7 +221,9 @@ st.caption(
     "2026 stand out, and each was carried by a different category (Home & "
     "Kitchen, then Electronics, then Clothing). The seasonal bar is tall "
     "because STL's drifting seasonal picks up those two big recent Marches, "
-    "not because March is an annual driver the way December might be because of the holidays."
+    "not because March is an annual driver the way December might be because of the holidays. "
+    "Categories are keyword-guessed from product names; the **Categories & "
+    "Returns** page has the full by-category breakdown and its caveats."
 )
 
 st.divider()
@@ -252,8 +254,7 @@ st.metric("Forecast: next 12 months", f"${next12_sum:,.0f}",
           delta=f"{(next12_sum/last12_sum-1)*100:+.0f}% vs. last 12 months")
 st.caption(
     "The interval is intentionally wide - monthly personal spend is genuinely "
-    "noisy with only ~100 data points behind this model, so a wide honest "
-    "interval beats a falsely precise point estimate. Interval built from Monte "
+    "noisy with only ~100 data points behind this model. Interval built from Monte "
     "Carlo simulation of the fitted model's error distribution, not a "
     "closed-form Gaussian assumption."
 )
