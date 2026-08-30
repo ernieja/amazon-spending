@@ -25,6 +25,7 @@ CATEGORICAL = [
     "#4C9AFF",  # blue (Okabe-Ito #0072B2, lightened for dark bg)
     "#D55E00",  # vermillion
     "#CC79A7",  # reddish purple
+    "#DC267F",  # magenta (IBM colorblind-safe palette; fills the saturated-pink gap)
     "#A6A6A6",  # light gray (replaces Okabe-Ito black for dark bg)
 ]
 

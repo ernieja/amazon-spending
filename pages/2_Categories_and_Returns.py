@@ -47,7 +47,7 @@ cat["pct"] = cat["spend"] / cat["spend"].sum() * 100
 
 # Stacked by year: the 7 biggest categories (~88% of spend) plus a rolled-up
 # band for the rest, so the mix shift over 15 years is visible in one chart.
-TOP_N = 7
+TOP_N = 8
 top_cats = cat.sort_values("spend", ascending=False).head(TOP_N).index.tolist()
 by_yc = (
     df.assign(cat=df["category"].where(df["category"].isin(top_cats),
@@ -61,7 +61,7 @@ for i, c in enumerate(top_cats + ["Other categories"]):  # biggest added first =
         continue
     fig.add_bar(
         x=by_yc.index, y=by_yc[c], name=c,
-        marker_color=category_color(7) if c == "Other categories"
+        marker_color=category_color(8) if c == "Other categories"
         else category_color(i),
         hovertemplate=f"%{{x}}<br>{c}: $%{{y:,.0f}}<extra></extra>",
     )
@@ -211,7 +211,7 @@ fig3 = go.Figure()
 for c in RET_TOP + ["Other categories"]:
     if c not in bucket_pivot:
         continue
-    color = category_color(7) if c == "Other categories" else category_color(top_cats.index(c))
+    color = category_color(8) if c == "Other categories" else category_color(top_cats.index(c))
     fig3.add_bar(x=bucket_pivot[c], y=bucket_pivot.index, orientation="h",
                  name=c, marker_color=color,
                  hovertemplate=f"%{{y}}<br>{c}: %{{x}} orders<extra></extra>")
