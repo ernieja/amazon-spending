@@ -90,7 +90,7 @@ fig.add_vrect(x0=2025.5, x1=annual["year"].max() + 0.5, fillcolor=PARTIAL_YEAR_F
               annotation_font_color=INK_MUTED)
 apply_layout(fig, title="Growth drivers, indexed to 2018 = 100", y_title="Index (2018 = 100)", x_title="Year")
 fig.update_xaxes(dtick=1)
-st.plotly_chart(fig, use_container_width=True, theme=None)
+st.plotly_chart(fig, width='stretch', theme=None)
 orders_idx = annual.loc[annual["year"] == LAST_FULL_YEAR, "Orders"].iloc[0]
 st.caption(
     f"Each line is that factor's own year vs. 2018, so 'Orders' at "
@@ -119,7 +119,7 @@ figm.add_vrect(x0=2025.5, x1=med.index.max() + 0.5, fillcolor=PARTIAL_YEAR_FILL,
 apply_layout(figm, title="Median price per line item, by year",
              y_title="Median item price ($)", x_title="Year")
 figm.update_xaxes(dtick=1)
-st.plotly_chart(figm, use_container_width=True, theme=None)
+st.plotly_chart(figm, width='stretch', theme=None)
 st.caption(
     "The typical line item has held around \\$20-30 for most of the period, "
     "with 2023 the outlier on the high side. It's a much flatter picture than "
@@ -149,14 +149,14 @@ fig2.add_scatter(x=decomp.index, y=decomp["observed"], name="Observed", mode="li
 fig2.add_scatter(x=decomp.index, y=decomp["trend"], name="Trend", mode="lines",
                   line=dict(color=category_color(0), width=3))
 apply_layout(fig2, title="Monthly spend: observed vs. trend", y_title="Spend ($)")
-st.plotly_chart(fig2, use_container_width=True, theme=None)
+st.plotly_chart(fig2, width='stretch', theme=None)
 
 fig3 = go.Figure()
 fig3.add_bar(x=decomp.index, y=decomp["seasonal"], marker_color=category_color(1),
              hovertemplate="%{x|%b %Y}: $%{y:.0f}<extra></extra>")
 fig3.add_hline(y=0, line_color=GRID)
 apply_layout(fig3, title="Seasonal component", y_title="$ vs. seasonally-typical month")
-st.plotly_chart(fig3, use_container_width=True, theme=None)
+st.plotly_chart(fig3, width='stretch', theme=None)
 st.caption(
     "December consistently runs highest (holiday spending), spring/late-summer "
     "months tend to run below the seasonally-adjusted trend."
@@ -182,7 +182,7 @@ fig4.add_scatter(
 fig4.add_scatter(x=fc.index, y=fc["forecast"], name="Forecast", mode="lines+markers",
                   line=dict(color=category_color(0), width=3, dash="dash"))
 apply_layout(fig4, title="Holt-Winters forecast (statsmodels)", y_title="Spend ($)")
-st.plotly_chart(fig4, use_container_width=True, theme=None)
+st.plotly_chart(fig4, width='stretch', theme=None)
 
 next12_sum = fc["forecast"].sum()
 last12_sum = s.iloc[-12:].sum()

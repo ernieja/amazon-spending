@@ -19,8 +19,8 @@ setup_page_style()
 st.title("Amazon Spending Analysis")
 st.write(
     "Fifteen years of my real Amazon order history (2011-2026), analyzed end to end: "
-    "what's actually driving spend growth, a deep dive into Whole Foods grocery "
-    "purchases, and a look at categories and returns. Built with pandas and statsmodels."
+    "what's actually driving spend growth, a look at categories and returns, and a "
+    "deep dive into Whole Foods grocery purchases. Built with pandas and statsmodels."
 )
 
 df = load_orders()
@@ -120,6 +120,15 @@ with c1:
     )
     st.page_link("pages/1_Spending_Trends.py", label="Open Spending Trends →")
 with c2:
+    st.markdown("#### Categories & Returns")
+    st.write(
+        "- What I actually buy, by category and by year (keyword-tagged from "
+        "product names, since Amazon doesn't export a category field).\n"
+        "- Return rate by category, and why things came back.\n"
+        "- Refunds vs. returns: not every refund means something was sent back."
+    )
+    st.page_link("pages/2_Categories_and_Returns.py", label="Open Categories & Returns →")
+with c3:
     st.markdown("#### Whole Foods Grocery")
     st.write(
         "- Grocery spend and cart-size trends since 2021.\n"
@@ -127,16 +136,7 @@ with c2:
         "- An honest look at why a true 'personal grocery CPI' isn't "
         "supportable from this data, and what I could measure instead."
     )
-    st.page_link("pages/2_Whole_Foods_Grocery.py", label="Open Whole Foods Grocery →")
-with c3:
-    st.markdown("#### Categories & Returns")
-    st.write(
-        "- What I actually buy, by category (keyword-tagged from product names, "
-        "since Amazon doesn't export a category field).\n"
-        "- Return rate and return reasons over time.\n"
-        "- Refunds vs. returns: not every refund means something was sent back."
-    )
-    st.page_link("pages/3_Categories_and_Returns.py", label="Open Categories & Returns →")
+    st.page_link("pages/3_Whole_Foods_Grocery.py", label="Open Whole Foods Grocery →")
 
 st.divider()
 st.caption(
