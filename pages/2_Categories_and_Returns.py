@@ -45,7 +45,7 @@ cat = (
 )
 cat["pct"] = cat["spend"] / cat["spend"].sum() * 100
 
-# Stacked by year: the 7 biggest categories (~88% of spend) plus a rolled-up
+# Stacked by year: the 8 biggest categories (~92% of spend) plus a rolled-up
 # band for the rest, so the mix shift over 15 years is visible in one chart.
 TOP_N = 8
 top_cats = cat.sort_values("spend", ascending=False).head(TOP_N).index.tolist()
@@ -71,14 +71,12 @@ fig.update_xaxes(type="category")
 fig.update_layout(hovermode="closest")  # after apply_layout, which forces "x unified"
 st.plotly_chart(fig, width="stretch", theme=None)
 st.caption(
-    "Books carried the early years (college); a Clothing binge in 2018-19; Grocery and "
-    "Pet only show up from 2021 (got a cat). Electronics is the one constant. **Other** is "
-    f"down to \\${other_spend:,.0f} "
+    "Books carried the early years (college); a Clothing binge in 2018-19; Pet (got a cat) and "
+    "Grocery only show up from 2021. Electronics is the one constant."
+    f" **Other** is only \\${other_spend:,.0f} "
     f"({other_spend / total_spend * 100:.0f}%, {other_items} line items): three "
-    "gift cards, a ukulele, two bottles of wine, and a few oddments (lye, fridge "
-    "magnets, a bike tube). Print books that were listed by title with no "
-    "catchable keyword (\"Yes Please\", \"Eating Animals\") now route to Books & "
-    "Media by their ISBN-format ASIN; audiobooks route there by their Audible source."
+    "gift cards, a ukulele, two bottles of wine, and a few oddments (fridge "
+    "magnets)."
 )
 
 # Price per line item, by category: is a big category big because of volume or
