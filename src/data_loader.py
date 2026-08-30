@@ -45,10 +45,16 @@ def annual_spend(_df: pd.DataFrame = None) -> pd.DataFrame:
 
 
 @st.cache_data
-def monthly_spend_series(_df: pd.DataFrame = None) -> pd.Series:
+def monthly_spend_series(exclude_grocery: bool = False) -> pd.Series:
     """Continuous monthly total-spend series from TIMESERIES_START through
-    the last observed month, zero-filled on months with no orders."""
-    df = _df if _df is not None else load_orders()
+    the last observed month, zero-filled on months with no orders.
+
+    ``exclude_grocery`` drops Whole Foods (panda01) line items -- grocery only
+    starts mid-2021 and is intermittent, so it's a structural break rather than
+    part of the retail-spending trend (it has its own page)."""
+    df = load_orders()
+    if exclude_grocery:
+        df = df[~df["is_grocery"]]
     monthly = df.groupby("year_month")["Total Amount"].sum()
     full_idx = pd.date_range(TIMESERIES_START, monthly.index.max(), freq="MS")
     s = monthly.reindex(full_idx, fill_value=0.0)

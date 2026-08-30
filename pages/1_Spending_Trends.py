@@ -19,7 +19,13 @@ st.set_page_config(page_title="Spending Trends", page_icon="📈", layout="wide"
 setup_page_style()
 st.title("Spending Trends")
 
+# Grocery (Whole Foods delivery) is excluded from this whole page: it only
+# starts mid-2021, is intermittent, and behaves nothing like the rest (many
+# ~$5 items per order). Left in, it dominates the item counts and drags the
+# average price down, turning the decomposition into a story about adopting a
+# grocery channel rather than about retail-spending growth. It has its own page.
 df = load_orders()
+df = df[~df["is_grocery"]].copy()
 LAST_FULL_YEAR = 2025  # 2026 is partial (through Aug) as of this data pull
 
 # ---------------------------------------------------------------------------
@@ -31,7 +37,8 @@ st.write(
     "price**. Splitting the change in spend between two years into these three "
     "factors (via a log decomposition, so the three pieces sum exactly to the "
     "total, see the code walkthrough) answers *why* spend changed, not just that "
-    "it did."
+    "it did. Whole Foods grocery is excluded throughout this page and covered "
+    "separately."
 )
 
 d = decompose_growth(df, "year", 2018, LAST_FULL_YEAR)
@@ -41,10 +48,12 @@ c2.metric("From ordering more often", f"{d['orders_growth_pct']:+.0f}%")
 c3.metric("From bigger baskets", f"{d['basket_growth_pct']:+.0f}%")
 c4.metric("From item price changes", f"{d['price_growth_pct']:+.0f}%")
 st.caption(
-    "Price changes are *negative*: the average item you buy actually got "
-    "cheaper over this period. Growth came entirely from ordering more often "
-    "and buying more per order - if prices hadn't dropped, growth would have "
-    "been even larger."
+    f"Growth is almost all from **ordering more often** "
+    f"({d['orders_growth_pct']:+.0f}%). Basket size barely moved "
+    f"({d['basket_growth_pct']:+.0f}%), and the average item got a little "
+    f"*more* expensive ({d['price_growth_pct']:+.0f}%). Leaving grocery in "
+    "would flip that last figure sharply negative, dozens of ~\\$5 Whole Foods "
+    "items a year pulling the average down."
 )
 
 # Indexed-to-2018 view across the full history, avoids the shares metric's
@@ -82,11 +91,41 @@ fig.add_vrect(x0=2025.5, x1=annual["year"].max() + 0.5, fillcolor=PARTIAL_YEAR_F
 apply_layout(fig, title="Growth drivers, indexed to 2018 = 100", y_title="Index (2018 = 100)", x_title="Year")
 fig.update_xaxes(dtick=1)
 st.plotly_chart(fig, use_container_width=True, theme=None)
+orders_idx = annual.loc[annual["year"] == LAST_FULL_YEAR, "Orders"].iloc[0]
 st.caption(
-    "Each line is that factor's own year vs. 2018, so 'Orders' at 269 in 2025 means "
-    "2.7x as many orders as 2018, independent of what price or basket size did. "
-    "Total spend is, by construction, the product of the other three (divided by "
-    "100²) - you can see it track whichever factor moves most."
+    f"Each line is that factor's own year vs. 2018, so 'Orders' at "
+    f"{orders_idx:.0f} in {LAST_FULL_YEAR} means {orders_idx / 100:.1f}x as many "
+    "orders as 2018, independent of what price or basket size did. Total spend "
+    "is, by construction, the product of the other three (divided by 100²) - you "
+    "can see it track whichever factor moves most."
+)
+
+st.write(
+    "That *average* item price is mean-based, so one laptop or TV swings it. "
+    "The **median** shows what a typical line item actually cost:"
+)
+priced = df[df["Total Amount"] > 0]
+med = priced.groupby("year")["Total Amount"].median()
+
+figm = go.Figure()
+figm.add_scatter(
+    x=med.index, y=med.values, name="Median item price", mode="lines+markers",
+    line=dict(color=category_color(0), width=3), marker=dict(size=6),
+    hovertemplate="%{x}: $%{y:.2f} median<extra></extra>",
+)
+figm.add_vrect(x0=2025.5, x1=med.index.max() + 0.5, fillcolor=PARTIAL_YEAR_FILL,
+               line_width=0, annotation_text="partial year",
+               annotation_position="top left", annotation_font_color=INK_MUTED)
+apply_layout(figm, title="Median price per line item, by year",
+             y_title="Median item price ($)", x_title="Year")
+figm.update_xaxes(dtick=1)
+st.plotly_chart(figm, use_container_width=True, theme=None)
+st.caption(
+    "The typical line item has held around \\$20-30 for most of the period, "
+    "with 2023 the outlier on the high side. It's a much flatter picture than "
+    "the mean-based *average item price* above, which the odd big-ticket buy "
+    "swings around. Pre-2016 years have just 2-20 items each, so those points "
+    "are noisy."
 )
 
 st.divider()
@@ -101,7 +140,7 @@ st.write(
     "decomposed via STL (Seasonal-Trend decomposition using LOESS)."
 )
 
-s = monthly_spend_series(df)
+s = monthly_spend_series(exclude_grocery=True)
 decomp = stl_decompose(s, period=12)
 
 fig2 = go.Figure()

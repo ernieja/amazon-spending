@@ -54,50 +54,189 @@ GROCERY_SUBCATEGORY_KEYWORDS = [
 
 PLACEHOLDERS = {"Not Applicable", "Not Available", "Not Provided"}
 
-# Ordered so more specific keywords win before generic ones (e.g. "grill" before "kitchen").
+# Keyword tagging
 CATEGORY_KEYWORDS = [
     ("Electronics & Accessories", [
-        "cable", "charger", "usb", "batter", "bluetooth", "headphone", "earbud",
-        "speaker", "camera", "monitor", "laptop", "ssd", "hdmi", "router", "adapter",
-        "remote control", "electric", " led ", "led ", "watch", "kindle fire", "echo dot",
-        "alexa", "phone holder", "phone case", "screen protector", "magsafe",
-        "car mount", "power band", "hard drive", "external drive",
+        # phrases
+        "remote control", "phone case", "phone holder", "phone mount",
+        "phone stand", "car mount", "car charger", "wall charger", "usb charger",
+        "fast charger", "gan charger", "screen protector",
+        "hard drive", "external drive", "usb c", "type c", "usb hub",
+        "power bank", "power strip", "surge protector", "wall tap",
+        "travel adapter", "travel adaptor", "power adapter", "aux cable",
+        "aux cord", "audio cable", "audio adapter", "headphone adapter",
+        "charging cable", "charging cord", "usb cable", "led backlight",
+        "led light", "string lights", "light bar", "light kit",
+        "tv wall mount", "monitor mount", "monitor arm", "monitor light",
+        "laptop stand", "laptop riser", "notebook stand", "memory card",
+        "micro sd", "microsd", "sd card", "smart plug", "smart bulb",
+        "wifi outlet", "fire tv", "tv stick", "streaming device",
+        "instant film", "security camera", "security cam", "indoor cam",
+        "sewing machine", "bike light", "kindle 2022", "kindle case",
+        "kindle paperwhite", "e reader",
+        # words
+        "cable", "charger", "usb", "bluetooth", "wifi", "headphone",
+        "headphones", "earbud", "earbuds", "earphones", "headset", "speaker",
+        "speakers", "soundbar", "amplifier", "preamp", "phono", "tv",
+        "television", "camera", "webcam", "gopro", "drone", "monitor",
+        "laptop", "macbook", "ssd", "hdd", "hdmi", "router", "modem",
+        "adapter", "adaptor", "dongle", "keyboard", "mouse", "trackpad",
+        "ipad", "iphone", "ipod", "smartphone", "airpods", "airtag",
+        "kindle", "projector", "turntable", "tripod", "gimbal", "battery",
+        "batteries", "powerbank", "chromecast", "roku", "trimmer", "shaver",
+        "pixel", "ringke", "spigen", "caseology", "otterbox", "polaroid",
+        "behringer", "earplug", "earplugs",
+        "audio technica", "instant film", "600 film",
     ]),
     ("Clothing & Shoes", [
-        "shirt", "dress", "jacket", "pant", "legging", "sock", "shoe", "sneaker",
-        "boot", "sandal", "bra", "underwear", "sweater", "hoodie", "scarf", "glove",
-        "hat", "cap ", "jean", "loafer", "flat", "heel", "flip flop", "slipper",
-        "vest", "coat", "skirt", "romper", "swimsuit", "bikini",
+        # phrases
+        "flip flop", "sleep pants", "baseball cap", "sun hat", "dad hat",
+        "panel cap", "running shoes", "soccer shoe", "skateboard shoe",
+        "ankle bootie", "nipple cover", "breast cover", "sports bra",
+        # words
+        "shirt", "tee", "blouse", "dress", "gown", "cheongsam", "jacket",
+        "coat", "parka", "pants", "leggings", "jeans", "jean", "shorts",
+        "trunks", "skirt", "romper", "sock", "socks", "sweater", "hoodie",
+        "sweatshirt", "cardigan", "flannel", "scarf", "gloves", "mittens",
+        "hat", "cap", "beanie", "shoe", "shoes", "sneaker", "sneakers",
+        "boot", "boots", "bootie", "sandal", "sandals", "loafer", "loafers",
+        "heels", "flats", "slipper", "slippers", "bra", "underwear",
+        "pasties", "swimsuit", "bikini", "bandana", "adidas", "nike",
+        "reebok", "puma", "asics", "vans", "keds", "emerica", "birkenstock",
+        "nydj", "clarks",
+    ]),
+    ("Pet Supplies", [
+        "cat food", "dog food", "cat treat", "dog treat", "cat feeder",
+        "dog feeder", "pet feeder", "cat fountain", "water fountain",
+        "pet fountain", "cat litter", "litter box", "litter mat",
+        "litter genie", "scratching post", "scratching board", "cat scratcher",
+        "cat tree", "cat climber", "cat window", "cat perch", "window perch",
+        "for cats", "for dogs", "cats and dogs", "dogs and cats", "dog bed",
+        "cat bed", "pet bed", "dog playpen", "dog crate", "dog leash",
+        "pet mat", "puppy", "kitten", "cats", "dogs", "nulo",
+    ]),
+    ("Baby & Kids", [
+        "diaper", "diapers", "crib", "playpen", "play yard", "stroller",
+        "pacifier", "onesie", "baby bib", "drool bib", "baby bottle",
+        "nursing", "baby wipes", "diaper rash", "butt paste",
     ]),
     ("Health & Beauty", [
-        "vitamin", "supplement", "shampoo", "lotion", "sunscreen", "toothpaste",
-        "skincare", "makeup", "razor", "deodorant", "soap", "serum", "cleanser",
-        "cleansing", "moisturizer", "sheet mask", "essence", "toner", "spf",
-        "hadalabo", "cosrx", "etude", "innisfree", "beauty", "hair dryer",
-        "toothbrush", "nail",
+        "hand sanitizer", "eye cream", "eye serum", "eye ointment", "lip balm",
+        "face milk", "hand soap", "insect repellent", "bug spray",
+        "acne patch", "pimple patch", "hydrocolloid", "sheet mask",
+        "hair dryer", "korean skin care", "korean skincare", "body scrubber",
+        "exfoliating shower", "shower towel", "loofah", "sleep mask",
+        "eye mask", "eau de", "de toilette", "de parfum",
+        "vitamin", "supplement", "shampoo", "conditioner", "lotion",
+        "sunscreen", "sunblock", "spf", "toothpaste", "toothbrush",
+        "skincare", "makeup", "mascara", "lipstick", "razor", "deodorant",
+        "serum", "cleanser", "moisturizer", "essence", "toner", "sebum",
+        "hadalabo", "cosrx", "etude", "innisfree", "aestura", "biore",
+        "curel", "picaridin", "famotidine", "pepcid", "heartburn",
+        "antigen", "whitestrips", "whitestrip", "babyliss", "babylisspro",
+        "cologne", "perfume", "fragrance", "vibrator",
     ]),
     ("Home & Kitchen", [
-        "kitchen", "cookware", "pan", "pot ", "knife", "mug", "towel", "bedding",
-        "pillow", "sheet set", "furniture", "lamp", "storage", "organizer", "rug",
-        "curtain", "grill", "vacuum", "cleaning", "table", "chair", "desk", "shelf",
-        "whisk", "baking mat", "zester", "grater", "jar", "cutting board",
-        "air purifier", "water filter", "wiper blade", "shower", "faucet",
-        "candle", "decor", "planter", "vase",
+        # phrases
+        "cutting board", "baking mat", "baking sheet", "cookie sheet",
+        "sheet pan", "cake pan", "loaf pan", "bread pan", "muffin pan",
+        "frying pan", "saute pan", "saucepan", "cooling rack", "baking rack",
+        "pizza steel", "baking steel", "cast iron", "dutch oven",
+        "measuring cup", "measuring spoon", "mixing bowl", "salad bowl",
+        "bench scraper", "pastry brush", "basting brush", "icing spatula",
+        "honing steel", "can opener", "bottle opener", "kitchen scale",
+        "food scale", "coffee scale", "espresso scale", "coffee grinder",
+        "spice grinder", "coffee mill", "burr grinder", "hand blender",
+        "coffee maker", "espresso maker", "espresso machine", "french press",
+        "pour over", "coffee filter", "coffee dripper", "filter basket",
+        "puck screen", "dosing funnel", "dosing ring", "gooseneck kettle",
+        "moka pot", "descaling", "water filter", "air filter", "air purifier",
+        "refrigerator filter", "vacuum cleaner", "wiper blade", "shower head",
+        "shower arm", "shower caddy", "shower organizer", "shower shelf",
+        "bath mat", "shower mat", "diatomaceous earth", "paper towel",
+        "towel holder", "towel bar", "sheet set", "duvet cover",
+        "picture frame", "poster frame", "poster hanger", "photo frame",
+        "wall decor", "metal sign", "door mat", "entrance mat", "floor mat",
+        "draft stopper", "door draft", "water bottle", "coffee table",
+        "side table", "end table", "plant stand", "floating shelf",
+        "floating shelves", "canning jar", "storage container", "storage bag",
+        "blackout curtain", "hand towel", "dish towel", "microfiber cloth",
+        "cleaning cloth", "cleaning towel", "spray bottle", "perfume atomizer",
+        "command hook", "command clip", "command strip", "command decorating",
+        "vent deflector", "air deflector", "heat deflector", "sun shade",
+        "windshield sun", "keyboard stand", "pocket scale", "gram scale",
+        "digital scale", "nordic ware", "half sheet", "meat thermometer",
+        "food thermometer", "instant read", "piping tip", "piping nozzle",
+        "cake decorating", "squeeze bottle", "dressing bottle",
+        "wood frame", "metal frame", "rain x", "glass treatment",
+        "whetstone", "sharpening stone", "kuhn rikon", "pitcher filter",
+        "pur filter", "pur water filter",
+        # words
+        "kitchen", "cookware", "skillet", "wok", "knife", "cleaver", "mug",
+        "tumbler", "kettle", "teapot", "whisk", "zester", "grater", "colander",
+        "spatula", "ladle", "tongs", "corkscrew", "trivet", "bakeware",
+        "ramekin", "banneton", "brotform", "pyrex", "tupperware", "jar",
+        "kitchenaid", "crockpot", "toaster", "microwave", "blender", "grinder",
+        "tamper", "portafilter", "aeropress", "chemex", "kalita", "hario",
+        "airfryer", "bedding", "pillow", "pillowcase", "comforter", "duvet",
+        "mattress", "furniture", "sofa", "couch", "dresser", "nightstand",
+        "shelf", "shelves", "bookshelf", "bookcase", "lamp", "curtain",
+        "curtains", "rug", "vase", "candle", "incense", "planter", "faucet",
+        "showerhead", "bidet", "vacuum", "roomba", "swiffer", "dehumidifier",
+        "humidifier", "footrest", "turntable", "shaker", "oxo", "kotobuki",
+        "command",
+    ]),
+    ("Crafts & Hobby", [
+        "crochet", "knitting", "embroidery", "cross stitch", "cross-stitch",
+        "needlepoint", "amigurumi", "safety eyes", "quilting", "sewing kit",
+        "yarn", "skein", "model paint", "paint brush set", "acrylic paint",
+        "magnetic poetry", "polymer clay", "scrapbook", "cabochon",
+        "nail craft", "nail art",
+    ]),
+    ("Books & Media", [
+        "a novel", "the novel", "audible", "audiobook", "kindle edition",
+        "paperback", "hardcover", "coloring book", "cookbook",
+        "modern library", "broadview", "dover books", "signed edition",
+        "anniversary edition", "vinyl", "poetry", "poems", "essays",
+        "dramatised", "blackwell readings", "box set",
+        "book", "novel", "textbook", "handbook", "edition",
     ]),
     ("Food & Snacks", [
-        "chews", "snack", "sparkling water", "candy", "chocolate", "coffee",
-        "tea bag", "protein bar", "granola", "jerky", "spice", "seasoning",
-        "sugar", "syrup", "sauce", "chip", "cracker", "pretzel", "nut butter",
+        "sparkling water", "protein bar", "nut butter", "tea bag",
+        "hot sauce", "chili sauce", "ginger chews", "snow sugar",
+        "chews", "snack", "candy", "granola", "jerky", "popcorn",
+        "chips", "crackers", "pretzels", "kombucha", "seltzer",
+        "malt powder", "barley malt",
     ]),
-    ("Books & Media", ["book", "audible", "kindle edition", "novel", "paperback", "hardcover"]),
-    ("Pet Supplies", ["dog ", "cat ", "pet ", "puppy", "kitten", "leash", "collar", "litter"]),
     ("Outdoors & Sporting", [
-        "camp", "hiking", "backpack", "tent", "sleeping bag", "bike", "cycling",
-        "fitness", "yoga", "exercise", "sport", "foliage pro", "fertilizer",
-        "plant food", "garden",
+        "sleeping bag", "trekking pole", "hiking pole", "water reservoir",
+        "hydration bladder", "hydration pack", "bike pump", "bicycle pump",
+        "bike tube", "bicycle tube", "inner tube", "bike helmet",
+        "cycling helmet", "bike lock", "u lock", "bike rack", "bike storage",
+        "swim goggle", "swim goggles", "ski goggles", "yoga mat",
+        "exercise mat", "foam mat", "resistance band", "jump rope",
+        "travel pillow", "camping pillow", "hip pack", "waist pack",
+        "waist pouch", "foliage pro", "plant food", "plant nutrient",
+        "climbing", "camp", "camping", "backpacking", "backpack", "hiking",
+        "hammock", "tent", "canteen", "carabiner", "kayak", "paddle",
+        "snorkel", "wetsuit", "bonsai", "fertilizer", "exercise", "garden",
+        "greenhouse", "camelbak", "hydrapak", "katadyn", "osprey", "flipbelt",
+        "helmet", "floor pump", "lezyne", "presta", "schrader",
     ]),
-    ("Toys & Games", ["toy", "game", "puzzle", "lego", "paint by number", "xbox", "playstation"]),
-    ("Office & Supplies", ["office", "notebook", "pen ", "pencil", "printer", "paper", "planner"]),
+    ("Toys & Games", [
+        "paint by number", "board game", "jigsaw puzzle", "building set",
+        "building blocks", "action figure", "plush toy", "stuffed animal",
+        "rubik", "funko", "amiibo", "trading card",
+        "toy", "game", "puzzle", "lego", "playmobil", "xbox", "playstation",
+        "nintendo", "amigo",
+    ]),
+    ("Office & Supplies", [
+        "ink cartridge", "toner cartridge", "printer paper", "copy paper",
+        "sticky notes", "index cards", "file folder", "binder clips",
+        "desk organizer", "label maker", "whiteboard", "stapler",
+        "tax software", "software",
+        "notebook", "planner", "pencil", "highlighter", "printer",
+    ]),
 ]
 
 
@@ -120,15 +259,22 @@ def derive_grocery_subcategory(product_name):
     return "Other Grocery"
 
 
-def derive_category(product_name, is_grocery):
+def derive_category(product_name, is_grocery, website=None):
     if is_grocery:
         return "Grocery"
+    if website == "Audible":
+        return "Books & Media"  # audiobooks, mostly listed by title with no keyword
     if not isinstance(product_name, str):
         return "Other"
-    name = product_name.lower()
+    norm = re.sub(r"[^a-z0-9]+", " ", product_name.lower()).strip()
+    tokens = set(norm.split())
     for category, keywords in CATEGORY_KEYWORDS:
-        if any(kw in name for kw in keywords):
-            return category
+        for kw in keywords:
+            if " " in kw:
+                if kw in norm:
+                    return category
+            elif kw in tokens or (kw + "s") in tokens:
+                return category
     return "Other"
 
 
@@ -139,8 +285,10 @@ def load_orders():
     df["Ship Date"] = pd.to_datetime(df["Ship Date"], format="ISO8601", errors="coerce")
     df["is_grocery"] = df["Website"] == "panda01"
     df["category"] = [
-        derive_category(name, grocery)
-        for name, grocery in zip(df["Product Name"], df["is_grocery"])
+        derive_category(name, grocery, site)
+        for name, grocery, site in zip(
+            df["Product Name"], df["is_grocery"], df["Website"]
+        )
     ]
     df["grocery_subcategory"] = df["Product Name"].where(df["is_grocery"]).apply(
         derive_grocery_subcategory
