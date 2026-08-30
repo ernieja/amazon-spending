@@ -15,6 +15,20 @@ RAW_RETURNS = "data/Returns Status.csv"
 RAW_REFUNDS = "data/Refund Details.csv"
 OUT_PATH = "data/processed_orders.csv"
 
+# processed_orders.csv is committed so the app deploys without the raw exports,
+# so the output is restricted to these columns. Everything the app reads, plus
+# the return/refund fields, and nothing else -- the raw Amazon export also
+# carries billing/shipping addresses, payment method, tracking numbers, gift
+# messages and serial numbers, none of which belong in a public repo.
+OUTPUT_COLUMNS = [
+    "Order ID", "Order Date", "Order Status",
+    "ASIN", "Product Name", "Original Quantity", "Unit Price", "Total Amount",
+    "is_grocery", "category", "grocery_subcategory", "year", "year_month",
+    "is_returned", "return_reasons", "return_amount",
+    "is_refunded", "refund_amount", "refund_date",
+    "is_return_related_refund", "reversal_reasons",
+]
+
 # Reversal reasons that mean an actual product return happened, as opposed to a
 # refund for a carrier/billing issue where nothing was sent back.
 RETURN_RELATED_REASONS = {"Customer return", "Item not satisfactory"}
@@ -170,7 +184,7 @@ CATEGORY_KEYWORDS = [
         "cake decorating", "squeeze bottle", "dressing bottle",
         "wood frame", "metal frame", "rain x", "glass treatment",
         "whetstone", "sharpening stone", "kuhn rikon", "pitcher filter",
-        "pur filter", "pur water filter",
+        "pur filter", "pur water filter", "food grade",
         # words
         "kitchen", "cookware", "skillet", "wok", "knife", "cleaver", "mug",
         "tumbler", "kettle", "teapot", "whisk", "zester", "grater", "colander",
@@ -211,7 +225,7 @@ CATEGORY_KEYWORDS = [
     ("Outdoors & Sporting", [
         "sleeping bag", "trekking pole", "hiking pole", "water reservoir",
         "hydration bladder", "hydration pack", "bike pump", "bicycle pump",
-        "bike tube", "bicycle tube", "inner tube", "bike helmet",
+        "bike tube", "self sealing tube", "bicycle tube", "inner tube", "bike helmet",
         "cycling helmet", "bike lock", "u lock", "bike rack", "bike storage",
         "swim goggle", "swim goggles", "ski goggles", "yoga mat",
         "exercise mat", "foam mat", "resistance band", "jump rope",
@@ -397,7 +411,12 @@ def main():
     returns = load_returns()
     refunds = load_refunds()
     merged = merge_orders_and_returns(orders, returns, refunds)
-    merged.to_csv(OUT_PATH, index=False)
+
+    dropped = [c for c in merged.columns if c not in OUTPUT_COLUMNS]
+    merged[OUTPUT_COLUMNS].to_csv(OUT_PATH, index=False)
+    print(f"Dropped {len(dropped)} columns before writing (PII / unused): "
+          f"{', '.join(dropped)}")
+    print()
 
     print(f"Loaded {len(orders)} order line items ({orders['Order ID'].nunique()} unique orders)")
     print(f"Loaded {len(returns)} return records")
